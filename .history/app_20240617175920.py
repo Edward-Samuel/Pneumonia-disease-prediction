@@ -63,8 +63,8 @@ iface = gr.Interface(
     inputs=gr.Image(type="filepath"),
     outputs=[gr.Textbox(label="True Label (from filename)"), gr.Label()],
     examples=examples,
-    title="Pneumonia X-Ray 3-Class Classification with Vision Transformer (ViT)",
-    description="Upload an X-ray image to classify it as normal, viral or bacterial pneumonia.",
+    title="Pneumonia X-Ray Classification",
+    description="Upload an X-ray image to classify it as normal or pneumonia.",
 )
 
 # Launch the app

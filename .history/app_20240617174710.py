@@ -2,6 +2,7 @@ import os
 import gradio as gr
 from PIL import Image
 import torch
+import torchvision.transforms as transforms
 from transformers import ViTForImageClassification, ViTImageProcessor
 from datasets import load_dataset
 
@@ -25,23 +26,15 @@ model = ViTForImageClassification.from_pretrained(
 # Set model to evaluation mode
 model.eval()
 
+# Define transformation for incoming images
 
-# Define the classification function
-def classify_image(img_path):
-    img = Image.open(img_path)
+
+def classify_image(img):
+    # Dummy classification function, replace with your model inference
+
     processed_input = processor(images=img, return_tensors="pt")
-    with torch.no_grad():
-        outputs = model(**processed_input)
-        logits = outputs.logits
-        probabilities = torch.softmax(logits, dim=1)[0].tolist()
 
-    result = {class_name: prob for class_name, prob in zip(class_names, probabilities)}
-    filename = os.path.basename(img_path).split(".")[0]
-    return {"filename": filename, "probabilities": result}
-
-
-def format_output(output):
-    return f"{output['filename']}", output["probabilities"]
+    return "Classified"
 
 
 # Function to load examples from a folder
@@ -59,12 +52,12 @@ examples = load_examples_from_folder(examples_folder)
 
 # Create the Gradio interface
 iface = gr.Interface(
-    fn=lambda img: format_output(classify_image(img)),
+    fn=classify_image,
     inputs=gr.Image(type="filepath"),
-    outputs=[gr.Textbox(label="True Label (from filename)"), gr.Label()],
+    outputs=gr.Label(),
     examples=examples,
-    title="Pneumonia X-Ray 3-Class Classification with Vision Transformer (ViT)",
-    description="Upload an X-ray image to classify it as normal, viral or bacterial pneumonia.",
+    title="Pneumonia X-Ray Classification",
+    description="Upload an X-ray image to classify it as normal or pneumonia.",
 )
 
 # Launch the app

@@ -36,7 +36,7 @@ def classify_image(img_path):
         probabilities = torch.softmax(logits, dim=1)[0].tolist()
 
     result = {class_name: prob for class_name, prob in zip(class_names, probabilities)}
-    filename = os.path.basename(img_path).split(".")[0]
+    filename = os.path.basename(img_path)
     return {"filename": filename, "probabilities": result}
 
 
@@ -61,10 +61,10 @@ examples = load_examples_from_folder(examples_folder)
 iface = gr.Interface(
     fn=lambda img: format_output(classify_image(img)),
     inputs=gr.Image(type="filepath"),
-    outputs=[gr.Textbox(label="True Label (from filename)"), gr.Label()],
+    outputs=[gr.Textbox(label="Filename"), gr.Label()],
     examples=examples,
-    title="Pneumonia X-Ray 3-Class Classification with Vision Transformer (ViT)",
-    description="Upload an X-ray image to classify it as normal, viral or bacterial pneumonia.",
+    title="Pneumonia X-Ray Classification",
+    description="Upload an X-ray image to classify it as normal or pneumonia.",
 )
 
 # Launch the app
