@@ -34,8 +34,10 @@ def classify_and_visualize(img, device="cpu", discard_ratio=0.9, head_fusion="me
     img = img.convert("RGB")
     processed_input = processor(images=img, return_tensors="pt").to(device)
 
+    processed_input = processed_input["pixel_values"].to(device)
+
     with torch.no_grad():
-        outputs = model(**processed_input)
+        outputs = model(processed_input, output_attentions=True)
         logits = outputs.logits
         probabilities = torch.softmax(logits, dim=1)[0].tolist()
         prediction = torch.argmax(logits, dim=-1).item()
@@ -45,7 +47,7 @@ def classify_and_visualize(img, device="cpu", discard_ratio=0.9, head_fusion="me
 
     # Generate attention heatmap
     heatmap_img = show_final_layer_attention_maps(
-        model, processed_input, device, discard_ratio, head_fusion
+        outputs, processed_input, device, discard_ratio, head_fusion
     )
 
     return {"probabilities": result, "heatmap": heatmap_img}
@@ -66,16 +68,17 @@ def load_examples_from_folder(folder_path):
 
 # Function to show final layer attention maps
 def show_final_layer_attention_maps(
-    model, tensor, device, discard_ratio=0.6, head_fusion="max", only_last_layer=False
+    outputs,
+    processed_input,
+    device,
+    discard_ratio=0.6,
+    head_fusion="max",
+    only_last_layer=False,
 ):
-    image = tensor["pixel_values"].to(device).squeeze(0)
 
     with torch.no_grad():
-        outputs = model(**tensor, output_attentions=True)
 
-        # if outputs.attentions[0] is None:
-        #   print("Attention outputs are None.")
-        #            return None
+        image = processed_input.squeeze(0)
 
         image = image - image.min()
         image = image / image.max()
