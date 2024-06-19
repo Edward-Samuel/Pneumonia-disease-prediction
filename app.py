@@ -52,10 +52,7 @@ def classify_and_visualize(img, device="cpu", discard_ratio=0.9, head_fusion="me
 
 
 def format_output(output):
-    return (
-        output["probabilities"],
-        output["heatmap"] if output["heatmap"] is not None else None,
-    )
+    return (output["probabilities"], output["heatmap"])
 
 
 # Function to load examples from a folder
@@ -76,9 +73,9 @@ def show_final_layer_attention_maps(
     with torch.no_grad():
         outputs = model(**tensor, output_attentions=True)
 
-        if outputs.attentions[0] is None:
-            print("Attention outputs are None.")
-            return None
+        # if outputs.attentions[0] is None:
+        #   print("Attention outputs are None.")
+        #            return None
 
         image = image - image.min()
         image = image / image.max()
@@ -144,6 +141,9 @@ iface = gr.Interface(
         gr.Image(label="Attention Heatmap"),
     ],
     examples=examples,
+    cache_examples=False,
+    allow_flagging=False,
+    concurrency_limit=1,
     title="Pneumonia X-Ray 3-Class Classification with Vision Transformer (ViT) using data augmentation",
     description="Upload an X-ray image to classify it as normal, viral or bacterial pneumonia. Checkout the model in more details [here](https://huggingface.co/pawlo2013/vit-pneumonia-x-ray_3_class). The examples presented are taken from the test set of [Kermany et al. (2018) dataset.](https://data.mendeley.com/datasets/rscbjbr9sj/2.) The attention heatmap over all layers of the transfomer done by the attention rollout techinique by the implementation of [jacobgil](https://github.com/jacobgil/vit-explain).",
 )
