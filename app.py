@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 
-
 # Model and processor configuration
 model_name_or_path = "google/vit-base-patch16-224-in21k"
 processor = ViTImageProcessor.from_pretrained(model_name_or_path)
@@ -31,9 +30,7 @@ model.eval()
 
 
 # Define the classification function
-# Define the classification function
 def classify_and_visualize(img, device="cpu", discard_ratio=0.9, head_fusion="mean"):
-    # filename = img.filename
     img = img.convert("RGB")
     processed_input = processor(images=img, return_tensors="pt").to(device)
 
@@ -45,7 +42,6 @@ def classify_and_visualize(img, device="cpu", discard_ratio=0.9, head_fusion="me
         predicted_class = class_names[prediction]
 
     result = {class_name: prob for class_name, prob in zip(class_names, probabilities)}
-    # get the filename from the image object
 
     # Generate attention heatmap
     heatmap_img = show_final_layer_attention_maps(
@@ -75,24 +71,18 @@ def load_examples_from_folder(folder_path):
 def show_final_layer_attention_maps(
     model, tensor, device, discard_ratio=0.6, head_fusion="max", only_last_layer=False
 ):
-    # Create a DataLoader with batch size equal to the number of images
     image = tensor["pixel_values"].to(device).squeeze(0)
 
-    # Iterate over the samples
     with torch.no_grad():
-        # Forward pass through the model
         outputs = model(**tensor, output_attentions=True)
 
-        print(type(outputs.attentions[0]))
         if outputs.attentions[0] is None:
             print("Attention outputs are None.")
             return None
 
-        # Scale image to [0, 1]
         image = image - image.min()
         image = image / image.max()
 
-        # Initialize the result tensor and recursively fuse the attention maps
         result = torch.eye(outputs.attentions[0].size(-1)).to(device)
         if only_last_layer:
             attention_list = outputs.attentions[-1].unsqueeze(0).to(device)
@@ -119,27 +109,21 @@ def show_final_layer_attention_maps(
             result = torch.matmul(a, result)
 
         mask = result[0, 0, 1:]
-        # In case of 224x224 image, this brings us from 196 to 14
         width = int(mask.size(-1) ** 0.5)
         mask = mask.reshape(width, width).cpu().numpy()
         mask = mask / np.max(mask)
 
         mask = cv2.resize(mask, (224, 224))
 
-        # Normalize mask to [0, 1] for visualization
         mask = (mask - np.min(mask)) / (np.max(mask) - np.min(mask))
-        heatmap = plt.cm.jet(mask)[:, :, :3]  # Apply colormap
+        heatmap = plt.cm.jet(mask)[:, :, :3]
 
-        # Superimpose heatmap on the original image
         showed_img = image.permute(1, 2, 0).detach().cpu().numpy()
         showed_img = (showed_img - np.min(showed_img)) / (
             np.max(showed_img) - np.min(showed_img)
-        )  # Normalize image
-        superimposed_img = (
-            heatmap * 0.4 + showed_img * 0.6
-        )  # Combine heatmap with original image
+        )
+        superimposed_img = heatmap * 0.4 + showed_img * 0.6
 
-        # Plot attention map
         superimposed_img_pil = Image.fromarray(
             (superimposed_img * 255).astype(np.uint8)
         )
@@ -165,4 +149,4 @@ iface = gr.Interface(
 )
 # Launch the app
 if __name__ == "__main__":
-    iface.launch()
+    iface.launch(debug=True)
