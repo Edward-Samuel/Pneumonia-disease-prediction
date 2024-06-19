@@ -85,6 +85,10 @@ def show_final_layer_attention_maps(
         # Forward pass through the model
         outputs = model(**tensor, output_attentions=True)
 
+        if outputs.attentions is None:
+            print("Attention outputs are None.")
+            return None
+
         # Scale image to [0, 1]
         image = image - image.min()
         image = image / image.max()
