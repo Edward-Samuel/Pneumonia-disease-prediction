@@ -32,10 +32,9 @@ model.eval()
 
 # Define the classification function
 # Define the classification function
-def classify_and_visualize(
-    img_path, device="cpu", discard_ratio=0.9, head_fusion="mean"
-):
-    img = Image.open(img_path).convert("RGB")
+def classify_and_visualize(img, device="cpu", discard_ratio=0.9, head_fusion="mean"):
+    # filename = img.filename
+    img = img.convert("RGB")
     processed_input = processor(images=img, return_tensors="pt").to(device)
 
     with torch.no_grad():
@@ -46,21 +45,20 @@ def classify_and_visualize(
         predicted_class = class_names[prediction]
 
     result = {class_name: prob for class_name, prob in zip(class_names, probabilities)}
-    filename = os.path.basename(img_path).split(".")[0]
+    # get the filename from the image object
 
     # Generate attention heatmap
     heatmap_img = show_final_layer_attention_maps(
         model, processed_input, device, discard_ratio, head_fusion
     )
 
-    return {"filename": filename, "probabilities": result, "heatmap": heatmap_img}
+    return {"probabilities": result, "heatmap": heatmap_img}
 
 
 def format_output(output):
     return (
-        f"{output['filename']}",
         output["probabilities"],
-        gr.Image(value=output["heatmap"]),
+        output["heatmap"] if output["heatmap"] is not None else None,
     )
 
 
@@ -69,7 +67,7 @@ def load_examples_from_folder(folder_path):
     examples = []
     for file in os.listdir(folder_path):
         if file.endswith((".png", ".jpg", ".jpeg")):
-            examples.append(os.path.join(folder_path, file))
+            examples.append(Image.open(os.path.join(folder_path, file)))
     return examples
 
 
@@ -156,9 +154,8 @@ examples = load_examples_from_folder(examples_folder)
 # Create the Gradio interface
 iface = gr.Interface(
     fn=lambda img: format_output(classify_and_visualize(img)),
-    inputs=gr.Image(type="filepath"),
+    inputs=gr.Image(type="pil", label="Upload X-Ray Image"),
     outputs=[
-        gr.Textbox(label="True Label (from filename)"),
         gr.Label(),
         gr.Image(label="Attention Heatmap"),
     ],
