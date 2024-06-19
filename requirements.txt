@@ -1,5 +1,5 @@
 torch
-transformers
+transformers ==  4.38.1
 datasets
 numpy
 opencv-python
