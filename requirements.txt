@@ -2,7 +2,7 @@ torch
 transformers
 datasets
 numpy
-cv2
+opencv
 PIL
 os
 matplotlib
