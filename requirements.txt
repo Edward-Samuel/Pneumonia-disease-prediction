@@ -3,6 +3,5 @@ transformers
 datasets
 numpy
 opencv-python
-PIL
-os
+Pillow
 matplotlib  
