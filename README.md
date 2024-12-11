@@ -1,5 +1,5 @@
 ---
-title: Pawlo2013-vit-pneumonia-x-ray 3 Class
+title: Pneumonia 3 Class
 emoji: 🐢
 colorFrom: green
 colorTo: purple
